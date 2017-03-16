@@ -20,6 +20,9 @@ library
   other-modules:       Lib.Prelude
   build-depends:       base >= 4.7 && < 5
                      , protolude >= 0.1.6 && < 0.2
+                     , unordered-containers
+                     , stm
+                     , network
   default-language:    Haskell2010
   default-extensions:  OverloadedStrings, NoImplicitPrelude
 
@@ -30,6 +33,9 @@ executable klashnikov-exe
   build-depends:       base
                      , klashnikov
                      , protolude >= 0.1.6 && < 0.2
+                     , wai
+                     , warp
+                     , http-types
   default-language:    Haskell2010
   default-extensions:  OverloadedStrings, NoImplicitPrelude
 
