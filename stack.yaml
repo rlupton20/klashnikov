@@ -15,7 +15,7 @@
 # resolver:
 #  name: custom-snapshot
 #  location: "./custom-snapshot.yaml"
-resolver: lts-7.5
+resolver: lts-7.20
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -39,6 +39,19 @@ packages:
 - '.'
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
+
+# Use our tree-threads library
+- location: 
+    git: https://github.com/rlupton20/tree-threads/
+    commit: 0380b68a661b73072293b6e19de298a0436d4ae6
+  extra-dep: true   
+
+# Use our concurrent-stack library
+- location: 
+    git: https://github.com/rlupton20/concurrent-stack
+    commit: 952b282e1907ff06a39e3778404eab5b2228f58c
+  extra-dep: true   
+
 extra-deps: []
 
 # Override default flag values for local packages and extra-deps

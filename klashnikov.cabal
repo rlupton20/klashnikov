@@ -36,6 +36,9 @@ executable klashnikov-exe
                      , wai
                      , warp
                      , http-types
+                     , concurrent-stack
+                     , http-reverse-proxy
+                     , http-client
   default-language:    Haskell2010
   default-extensions:  OverloadedStrings, NoImplicitPrelude
 
