@@ -17,12 +17,12 @@ library
   hs-source-dirs:      src
   ghc-options:         -Wall
   exposed-modules:     Lib
+                     , Klashnikov.Config
   other-modules:       Lib.Prelude
   build-depends:       base >= 4.7 && < 5
                      , protolude >= 0.1.6 && < 0.2
-                     , unordered-containers
-                     , stm
-                     , network
+                     , yaml
+                     , text
   default-language:    Haskell2010
   default-extensions:  OverloadedStrings, NoImplicitPrelude
 
@@ -49,6 +49,11 @@ test-suite klashnikov-test
   build-depends:       base
                      , klashnikov
                      , protolude >= 0.1.6 && < 0.2
+                     , yaml
+                     , text
+                     , test-framework
+                     , test-framework-hunit
+                     , HUnit
   ghc-options:         -Wall -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
   default-extensions:  OverloadedStrings, NoImplicitPrelude
