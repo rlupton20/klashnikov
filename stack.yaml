@@ -40,17 +40,23 @@ packages:
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
 
-# Use our tree-threads library
+# Use the tree-threads library
 - location: 
     git: https://github.com/rlupton20/tree-threads/
     commit: 0380b68a661b73072293b6e19de298a0436d4ae6
   extra-dep: true   
 
-# Use our concurrent-stack library
+# Use the concurrent-stack library
 - location: 
     git: https://github.com/rlupton20/concurrent-stack
     commit: 952b282e1907ff06a39e3778404eab5b2228f58c
   extra-dep: true   
+
+# Use the haskell-etcd library 
+- location:
+    git: https://github.com/rlupton20/haskell-etcd
+    commit: a684a1a3eaf6ab17added3fc2ad23a2493b7679d
+  extra-dep: true
 
 extra-deps: []
 
