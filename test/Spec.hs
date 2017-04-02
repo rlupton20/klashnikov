@@ -28,7 +28,7 @@ canParseConfigurationFile = "Check can parse configuration file" ~:
                expected = Just $ KC "http://127.0.0.1:2379"
                parsed = Y.decode yaml in
              expected @=? parsed
-             
+
 canDetectBadConfigurationFile :: HU.Test
 canDetectBadConfigurationFile = "Check can detect bad configuration file" ~:
   test
@@ -37,4 +37,3 @@ canDetectBadConfigurationFile = "Check can detect bad configuration file" ~:
                expected = Nothing :: Maybe KlashnikovConfig
                parsed = Y.decode yaml in
              expected @=? parsed
-

@@ -41,6 +41,12 @@ executable klashnikov-exe
                      , http-reverse-proxy
                      , http-client
                      , haskell-etcd
+                     , mtl
+                     , text
+                     , aeson
+                     , tyro
+                     , stm
+                     , vector
   default-language:    Haskell2010
   default-extensions:  OverloadedStrings, NoImplicitPrelude
 
