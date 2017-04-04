@@ -45,6 +45,8 @@ executable klashnikov-exe
                      , text
                      , aeson
                      , tyro
+                     , stm
+                     , vector
   default-language:    Haskell2010
   default-extensions:  OverloadedStrings, NoImplicitPrelude
 
