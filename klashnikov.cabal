@@ -16,10 +16,9 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   ghc-options:         -Wall
-  exposed-modules:     Lib
-                     , Klashnikov.Config
+  exposed-modules:     Klashnikov.Config
   other-modules:       Lib.Prelude
-  build-depends:       base >= 4.7 && < 5
+  build-depends:       base >= 4.9 && < 5
                      , protolude >= 0.1.6 && < 0.2
                      , yaml
                      , text
@@ -41,7 +40,6 @@ executable klashnikov-exe
                      , http-reverse-proxy
                      , http-client
                      , haskell-etcd
-                     , mtl
                      , text
                      , aeson
                      , tyro
