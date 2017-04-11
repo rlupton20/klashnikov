@@ -30,6 +30,7 @@ import           Network.HTTP.Types (serviceUnavailable503)
 import           Control.Concurrent.Stack (Stack, register, runStack)
 import           Database.Etcd ( Etcd, EtcdM, etcd, runEtcd
                                , watchDirectoryFromIndex, getDirectory )
+import           Database.Etcd.JSON (ModifiedIndex(..))
 
 
 
@@ -48,21 +49,26 @@ runManager l i m = evalStateT (runReaderT m l) i
 --------------------------------------------------------------------------------
 
 main :: IO ()
-main = runStack core
+main = let configStore = etcd "http://localhost:2379/" in
+  do
+    index <- runEtcd configStore $ getWorkingIndex backends
+    case index of
+      Just ix -> runStack $ core configStore backends ix
+      Nothing -> putStrLn $ "No keyspace configured at: " ++ backends
+  where
+    backends :: String
+    backends = "backends/"
 
-core :: Stack ()
-core = do
+core :: Etcd -> String -> Integer -> Stack ()
+core configStore backends index = do
   env <- liftIO $ newEnvironment
-  register $ runManager env 1 (watch $ etcd "http://localhost:2379/")
+  register $ runManager env index (watch configStore)
 
   manager <- liftIO $ newManager defaultManagerSettings
   register $
     run 8080 $ waiProxyTo (balancer env) defaultOnExc manager
 
   where
-    backends :: String
-    backends = "backends/"
-
     watch :: Etcd -> Manager ()
     watch configStore = forever $ do
       env <- ask
@@ -93,12 +99,21 @@ balancer env = \_ -> do
 
 type ExtractNodeValues a = "node" >%> "nodes" >%> List ("value" >%> Extract a)
 
+unwrapExtractNodeValues :: ExtractNodeValues a -> [a]
+unwrapExtractNodeValues = fmap unwrap . unwrap
+
+maybeListToList :: Maybe [a] -> [a]
+maybeListToList = maybe [] identity
+
 listOfBackendsOnEvent :: String -> Integer -> EtcdM [Backend]
 listOfBackendsOnEvent path watchIndex = do
   _ <- watchDirectoryFromIndex path watchIndex :: EtcdM (Maybe ())
+  getListOfBackends path
+
+getListOfBackends :: String -> EtcdM [Backend]
+getListOfBackends path = do
   be <- getDirectory path :: EtcdM (Maybe (ExtractNodeValues Text))
-  let maybeListToList = maybe [] identity
-      parsed = maybeListToList ((fmap (fmap unwrap)) $ (fmap unwrap be))
+  let parsed = maybeListToList $ fmap unwrapExtractNodeValues be
       structure = maybeListToList . sequence . filter isJust . fmap parseBackend
   return $ structure parsed
 
@@ -106,6 +121,40 @@ buildBalancerStructure :: [Backend] -> V.Vector ProxyDest
 buildBalancerStructure = let encodeAddress = E.encodeUtf8 . address
                              toDest = ProxyDest <$> encodeAddress <*> port in
   V.fromList . map toDest
+
+
+--------------------------------------------------------------------------------
+-- Obtaining current modified indices
+--------------------------------------------------------------------------------
+
+
+type ExtractNodeModifiedIndex =
+  "node" >%> "nodes" >%> List ("modifiedIndex" >%> Extract Integer)
+
+getCurrentDirectoryIndex :: String -> EtcdM (Maybe Integer)
+getCurrentDirectoryIndex path = do
+  ix <- getDirectory path :: EtcdM (Maybe ModifiedIndex)
+  return $ fmap index ix
+  where
+    index :: ModifiedIndex -> Integer
+    index (ModifiedIndex ix) = ix
+
+getNodesIndices :: String -> EtcdM [Integer]
+getNodesIndices path = do
+  ixs <- getDirectory path :: EtcdM (Maybe ExtractNodeModifiedIndex)
+  let simplified = maybeListToList $ fmap unwrapModifiedIndices ixs
+  return simplified
+  where
+    unwrapModifiedIndices :: ExtractNodeModifiedIndex -> [Integer]
+    unwrapModifiedIndices = fmap unwrap . unwrap
+
+getWorkingIndex :: String -> EtcdM (Maybe Integer)
+getWorkingIndex path = do
+  ixs <- getNodesIndices path
+  case ixs of
+    [] -> getCurrentDirectoryIndex path
+    xs -> return . Just $ maximum xs
+
 
 
 --------------------------------------------------------------------------------

@@ -55,7 +55,7 @@ packages:
 # Use the haskell-etcd library 
 - location:
     git: https://github.com/rlupton20/haskell-etcd
-    commit: 2424e4f35d32318a8102a66c203db0131a385a1e
+    commit: a6d78e482a3f8e7f144eb329b3cf22c00b4ee065
   extra-dep: true
 
 # Use tyro

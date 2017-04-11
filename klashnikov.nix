@@ -1,7 +1,7 @@
 { mkDerivation, base, concurrent-stack, haskell-etcd, http-client
 , http-reverse-proxy, http-types, HUnit, protolude, stdenv
 , test-framework, test-framework-hunit, text, tree-threads, wai
-, warp, yaml
+, warp, yaml, tyro
 }:
 mkDerivation {
   pname = "klashnikov";
@@ -12,7 +12,7 @@ mkDerivation {
   libraryHaskellDepends = [ base protolude text yaml ];
   executableHaskellDepends = [
     base concurrent-stack haskell-etcd http-client http-reverse-proxy
-    http-types protolude tree-threads wai warp
+    http-types protolude tree-threads wai warp tyro
   ];
   testHaskellDepends = [
     base HUnit protolude test-framework test-framework-hunit text yaml
