@@ -28,6 +28,9 @@ library
 executable klashnikov-exe
   hs-source-dirs:      app
   main-is:             Main.hs
+  other-modules:       Core
+                     , Types
+                     , Etcd.Backends
   ghc-options:         -Wall -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                      , klashnikov
