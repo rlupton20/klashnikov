@@ -1,0 +1,2 @@
+etcd: http://localhost:2379/
+backends: /backends

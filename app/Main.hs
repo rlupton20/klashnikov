@@ -25,6 +25,7 @@ import           Control.Concurrent.Stack (Stack, register, runStack)
 import           Database.Etcd ( Etcd, etcd, runEtcd )
 import           Etcd.Backends
 import           Etcd.Indices
+import qualified Klashnikov.Config as Config
 
 
 
@@ -57,15 +58,18 @@ newEnvironment = do
 --------------------------------------------------------------------------------
 
 main :: IO ()
-main = let configStore = etcd "http://localhost:2379/" in
-  do
-    index <- runEtcd configStore $ getWorkingIndex backends
-    case index of
-      Just ix -> runStack $ core configStore backends ix
-      Nothing -> putStrLn $ "No keyspace configured at: " ++ backends
-  where
-    backends :: String
-    backends = "backends/"
+main = do
+  cfg <- Config.loadConfigFromFile "klashnikov.yaml"
+  case cfg of
+    Left e -> putStrLn $ "Bad configuration file: " ++ show e
+    Right config -> do
+      let configStore = etcd $ Config.etcd config
+          backends = Config.backends config
+      index <- runEtcd configStore $ getWorkingIndex backends
+      case index of
+        Just ix -> runStack $ core configStore backends ix
+        Nothing -> putStrLn $ "No keyspace configured at: " ++ backends
+
 
 core :: Etcd -> String -> Integer -> Stack ()
 core configStore backends index = do
