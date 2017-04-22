@@ -24,8 +24,8 @@ canParseConfigurationFile :: HU.Test
 canParseConfigurationFile = "Check can parse configuration file" ~:
   test
   where
-    test = let yaml = "etcd: http://127.0.0.1:2379\nbackends: /backends"
-               expected = Just $ KC "http://127.0.0.1:2379" "/backends"
+    test = let yaml = "etcd: http://127.0.0.1:2379\nbackends: /backends\nport: 8080"
+               expected = Just $ KC "http://127.0.0.1:2379" "/backends" 8080
                parsed = Y.decode yaml in
              expected @=? parsed
 

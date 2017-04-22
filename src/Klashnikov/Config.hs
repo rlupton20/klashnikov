@@ -8,10 +8,13 @@ import Data.String (String)
 import Lib.Prelude
 
 data KlashnikovConfig = KC { etcd :: String
-                           , backends :: String } deriving (Eq, Show)
+                           , backends :: String
+                           , port :: Int } deriving (Eq, Show)
 
 instance Y.FromJSON KlashnikovConfig where
-  parseJSON (Y.Object v) = KC <$> v .: "etcd" <*> v .: "backends"
+  parseJSON (Y.Object v) = KC <$> v .: "etcd"
+                              <*> v .: "backends"
+                              <*> v .: "port"
   parseJSON _ = empty
 
 loadConfigFromFile :: String -> IO (Either Y.ParseException KlashnikovConfig)

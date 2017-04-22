@@ -76,7 +76,7 @@ core config = do
 
       manager <- liftIO $ newManager defaultManagerSettings
       register $
-        run 8080 $ waiProxyTo (balancer env) defaultOnExc manager
+        run port $ waiProxyTo (balancer env) defaultOnExc manager
 
   where
     configStore :: Etcd
@@ -84,6 +84,9 @@ core config = do
 
     backends :: String
     backends = Config.backends config
+
+    port :: Int
+    port = Config.port config
 
     watch :: String -> Etcd -> Manager ()
     watch path cs = forever $ do
