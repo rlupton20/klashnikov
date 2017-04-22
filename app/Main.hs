@@ -62,31 +62,35 @@ main = do
   cfg <- Config.loadConfigFromFile "klashnikov.yaml"
   case cfg of
     Left e -> putStrLn $ "Bad configuration file: " ++ show e
-    Right config -> do
-      let configStore = etcd $ Config.etcd config
-          backends = Config.backends config
-      index <- runEtcd configStore $ getWorkingIndex backends
-      case index of
-        Just ix -> runStack $ core configStore backends ix
-        Nothing -> putStrLn $ "No keyspace configured at: " ++ backends
+    Right config -> runStack (core config)
 
 
-core :: Etcd -> String -> Integer -> Stack ()
-core configStore backends index = do
-  env <- liftIO $ newEnvironment
-  register $ runManager env index (watch configStore)
+core :: Config.KlashnikovConfig -> Stack ()
+core config = do
+  index <- liftIO . runEtcd configStore $ getWorkingIndex backends
+  case index of
+    Nothing -> liftIO . putStrLn $ "No keyspace configured at: " ++ backends
+    Just ix -> do
+      env <- liftIO $ newEnvironment
+      register $ runManager env ix (watch backends configStore)
 
-  manager <- liftIO $ newManager defaultManagerSettings
-  register $
-    run 8080 $ waiProxyTo (balancer env) defaultOnExc manager
+      manager <- liftIO $ newManager defaultManagerSettings
+      register $
+        run 8080 $ waiProxyTo (balancer env) defaultOnExc manager
 
   where
-    watch :: Etcd -> Manager ()
-    watch cs = forever $ do
+    configStore :: Etcd
+    configStore = etcd $ Config.etcd config
+
+    backends :: String
+    backends = Config.backends config
+
+    watch :: String -> Etcd -> Manager ()
+    watch path cs = forever $ do
       env <- ask
       i <- get
       liftIO $ do
-        rbe <- runEtcd cs $ listOfBackendsOnEvent backends i
+        rbe <- runEtcd cs $ listOfBackendsOnEvent path i
         let !struct = buildBalancerStructure rbe
         atomically $ writeTVar (proxies env) struct
         putStrLn $ "Saw event: " ++ show i ++ " " ++ show rbe
