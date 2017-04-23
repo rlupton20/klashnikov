@@ -1,11 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE BangPatterns #-}
 module Main where
 
-import           Protolude
 import           Core
+import           Protolude
 
 import           Network.Wai (Request, responseLBS)
 import           Network.Wai.Handler.Warp (run)
@@ -25,6 +23,8 @@ import           Control.Concurrent.Stack (Stack, register, runStack)
 import           Database.Etcd ( Etcd, etcd, runEtcd )
 import           Etcd.Backends
 import           Etcd.Indices
+import           Klashnikov.Config ( Configuration, runConfiguration
+                                   , KlashnikovError(..))
 import qualified Klashnikov.Config as Config
 
 
@@ -59,18 +59,23 @@ newEnvironment = do
 
 main :: IO ()
 main = do
-  cfg <- Config.loadConfigFromFile "klashnikov.yaml"
-  case cfg of
-    Left e -> putStrLn $ "Bad configuration file: " ++ show e
-    Right config -> runStack (core config)
+  setup <- runConfiguration init
+  case setup of
+    Left e -> putStrLn $ ( show e :: String )
+    Right core -> runStack core
+
+init :: Configuration (Stack ())
+init = do
+  config <- Config.loadConfigFromFile "klashnikov.yaml"
+  buildCore config
 
 
-core :: Config.KlashnikovConfig -> Stack ()
-core config = do
+buildCore :: Config.KlashnikovConfig -> Configuration (Stack ())
+buildCore config = do
   index <- liftIO . runEtcd configStore $ getWorkingIndex backends
   case index of
-    Nothing -> liftIO . putStrLn $ "No keyspace configured at: " ++ backends
-    Just ix -> do
+    Nothing -> throwError $ NoKeyspace backends
+    Just ix -> return $ do
       env <- liftIO $ newEnvironment
       register $ runManager env ix (watch backends configStore)
 
