@@ -1,16 +1,18 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Klashnikov.Config
 (   KlashnikovConfig(..)
+  , getConfigFilename
   , loadConfigFromFile
   , Configuration
   , runConfiguration
   , KlashnikovError(..) )where
 
-import qualified Data.Yaml as Y
-import           Data.Yaml ((.:))
 import           Control.Applicative ((<$>), empty)
 import           Data.String (String)
+import           Data.Yaml ((.:))
+import qualified Data.Yaml as Y
 import           Lib.Prelude
+import           System.Environment (getArgs)
 
 import           Control.Monad.Except (ExceptT(..), runExceptT, withExceptT)
 
@@ -24,6 +26,19 @@ instance Y.FromJSON KlashnikovConfig where
                               <*> v .: "backends"
                               <*> v .: "port"
   parseJSON _ = empty
+
+
+--------------------------------------------------------------------------------
+-- Monadic computations for initial configuration
+--------------------------------------------------------------------------------
+
+getConfigFilename :: Configuration String
+getConfigFilename = do
+  as <- liftIO $ getArgs
+  case as of
+    [] -> throwError NoConfigFileSpecified
+    [file] -> return file
+    _ -> throwError TooManyCommandLineParameters
 
 
 loadConfigFromFile :: String -> Configuration KlashnikovConfig
@@ -50,5 +65,7 @@ fromEither = ExceptT
 -- Error types for bootstrapping the system
 --------------------------------------------------------------------------------
 
-data KlashnikovError = BadConfigFile Y.ParseException |
+data KlashnikovError = NoConfigFileSpecified |
+                       TooManyCommandLineParameters |
+                       BadConfigFile Y.ParseException |
                        NoKeyspace String deriving (Show)

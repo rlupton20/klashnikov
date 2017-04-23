@@ -24,7 +24,8 @@ import           Database.Etcd ( Etcd, etcd, runEtcd )
 import           Etcd.Backends
 import           Etcd.Indices
 import           Klashnikov.Config ( Configuration, runConfiguration
-                                   , KlashnikovError(..))
+                                   , getConfigFilename, loadConfigFromFile
+                                   , KlashnikovConfig, KlashnikovError(..))
 import qualified Klashnikov.Config as Config
 
 
@@ -64,13 +65,15 @@ main = do
     Left e -> putStrLn $ ( show e :: String )
     Right core -> runStack core
 
+
 init :: Configuration (Stack ())
 init = do
-  config <- Config.loadConfigFromFile "klashnikov.yaml"
+  file <- getConfigFilename
+  config <- loadConfigFromFile file
   buildCore config
 
 
-buildCore :: Config.KlashnikovConfig -> Configuration (Stack ())
+buildCore :: KlashnikovConfig -> Configuration (Stack ())
 buildCore config = do
   index <- liftIO . runEtcd configStore $ getWorkingIndex backends
   case index of
